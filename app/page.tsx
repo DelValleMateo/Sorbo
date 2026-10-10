@@ -10,7 +10,7 @@ import { WineTiles } from "@/components/sections/wine-tiles";
 
 /**
  * Home v2: alterna cuero bordó y cuero crema.
- * Promo → Hero animado → Beneficios → Ocasiones → Combos → Vinoteca → Catálogo → Cómo pedir → Clientes
+ * Promo → Hero animado → Beneficios → Ocasiones → Vinoteca → Combos → Catálogo → Cómo pedir → Clientes
  */
 export default function HomePage() {
   return (
@@ -19,8 +19,8 @@ export default function HomePage() {
       <Hero />
       <TrustStrip />
       <Occasions />
-      <CombosSection />
       <WineTiles />
+      <CombosSection />
       <CatalogSection />
       <HowToOrder />
       <Testimonials />
