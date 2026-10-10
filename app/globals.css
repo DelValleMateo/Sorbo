@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+/*
+ * Tokens extraídos de "Sorbo Tienda v3.dc.html".
+ * Ajustes de contraste AA marcados con [AA].
+ */
+@theme {
+  /* Superficies */
+  --color-paper: #670c18; /* color medio de la felpa de fondo (respaldo) */
+  --color-cream: #fbf6ec;
+  --color-paper-light: #efe6d2; /* marfil (fondo-papel.webp, generado desde la felpa con scripts/make-ivory.mjs) */
+  --color-sand: #efe5d3;
+
+  /* Líneas */
+  --color-line: #e0d3bc;
+  --color-line-soft: #e6dac5;
+  --color-line-strong: #d3c3a8;
+  --color-field: #8a7a6b; /* [AA] borde de inputs: diseño #D3C3A8 = 1.47:1, mínimo 3:1 */
+
+  /* Texto */
+  --color-ink: #2a1a1c;
+  --color-ink-soft: #3d2c2c;
+  --color-muted: #5e4b47;
+  --color-muted-2: #6b5650;
+  --color-placeholder: #766760; /* [AA] diseño #9C8A80 = 3.06:1, ahora 5.0:1 */
+
+  /* Marca (vino) */
+  --color-wine: #6d1a2e;
+  --color-wine-dark: #4e1120;
+  --color-wine-deep: #3f0d19;
+  --color-wine-light: #8a2538;
+  --color-wine-tint: #f1dfd8;
+  --color-gold: #e0c58a; /* champagne: acentos sobre fondos oscuros (7.5:1 sobre la felpa) */
+  --color-gold-deep: #a88532; /* champagne: líneas y estrellas sobre marfil (decorativo) */
+
+  /* Estados (siempre acompañados de ícono + texto) */
+  --color-ok: #2f5d3a;
+  --color-warn: #7a4a00;
+
+  /* Tipografía */
+  --font-serif: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+
+  /* Radios */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 18px;
+
+  /* Sombras */
+  --shadow-btn: 0 10px 24px -14px rgba(78, 17, 32, 0.9);
+  --shadow-soft: 0 22px 40px -24px rgba(20, 0, 5, 0.75);
+  --shadow-card: 0 18px 40px -20px rgba(42, 26, 28, 0.25);
+  --shadow-hero: 0 40px 80px -30px rgba(40, 6, 14, 0.65);
+  --shadow-cta: 0 12px 30px -12px rgba(40, 6, 14, 0.6);
+  --shadow-bar: 0 14px 34px rgba(42, 26, 28, 0.3);
+  --shadow-drawer: -20px 0 50px rgba(42, 26, 28, 0.15);
+
+  /* Breakpoints: 375 base, 768, 1024, 1440 */
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+
+  /* Easing y animaciones */
+  --ease-sorbo: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --animate-up: sorbo-up 0.8s var(--ease-sorbo) both;
+  --animate-float: sorbo-float 6s ease-in-out infinite;
+  --animate-pulse-ring: sorbo-pulse 1.8s infinite;
+  --animate-progress: sorbo-progress 5s linear forwards;
+  --animate-rise: sorbo-rise 12s linear infinite;
+  --animate-slide-left: sorbo-slide-left 0.3s var(--ease-sorbo) both;
+  --animate-slide-right: sorbo-slide-right 0.3s var(--ease-sorbo) both;
+  --animate-slide-up: sorbo-slide-up 0.3s var(--ease-sorbo) both;
+  --animate-fade: sorbo-fade 0.2s ease both;
+
+  /* Tipografía fluida (clamp) */
+  --text-display: clamp(40px, min(5.6vw, 9svh), 84px);
+  --text-display--line-height: 0.94;
+  --text-display--letter-spacing: -0.03em;
+  --text-h1: clamp(36px, 5vw, 64px);
+  --text-h1--line-height: 1;
+  --text-h1--letter-spacing: -0.025em;
+  --text-h2: clamp(30px, 4vw, 52px);
+  --text-h2--line-height: 1;
+  --text-h2--letter-spacing: -0.02em;
+  --text-footer-logo: clamp(48px, 6vw, 72px);
+  --text-footer-logo--line-height: 0.9;
+  --text-footer-logo--letter-spacing: -0.03em;
+
+  @keyframes sorbo-slide-left { from { transform: translateX(-100%); } to { transform: none; } }
+  @keyframes sorbo-slide-right { from { transform: translateX(100%); } to { transform: none; } }
+  @keyframes sorbo-slide-up { from { transform: translateY(100%); } to { transform: none; } }
+  @keyframes sorbo-fade { from { opacity: 0; } to { opacity: 1; } }
+
+  @keyframes sorbo-up { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  @keyframes sorbo-rise { 0% { transform: translateY(0); opacity: 0; } 12% { opacity: 1; } 85% { opacity: 0.8; } 100% { transform: translateY(-920px); opacity: 0; } }
+  @keyframes sorbo-pulse { 0% { box-shadow: 0 0 0 0 rgba(251, 246, 236, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(251, 246, 236, 0); } 100% { box-shadow: 0 0 0 0 rgba(251, 246, 236, 0); } }
+  @keyframes sorbo-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes sorbo-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+}
+
+/* Superficie vino: textura de terciopelo; el texto va en crema */
+@utility bg-velvet {
+  background-color: var(--color-wine-deep);
+  background-image: url("/images/fondo-vino.webp");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Superficie felpa: bordó con textura, el texto va en crema */
+@utility bg-felpa {
+  background-color: var(--color-paper);
+  background-image: url("/images/fondo-felpa.webp");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Superficie papel: marfil con la misma textura de felpa, en tono claro */
+@utility bg-papel {
+  background-color: var(--color-paper-light);
+  background-image: url("/images/fondo-papel.webp");
+  background-size: cover;
+  background-position: center;
+}
+
+/* Contenedor del diseño: 1240 px + gutter fluido */
+@utility wrap {
+  max-width: 1240px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 40px);
+}
+
+/* Foco visible sobre superficies oscuras (vino / carbón) */
+@utility focus-dark {
+  & :focus-visible,
+  &:focus-visible {
+    outline-color: var(--color-cream);
+    box-shadow: 0 0 0 5px var(--color-wine-deep);
+  }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; font-size: 100%; }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "tnum" 1;
+  }
+  a { color: var(--color-wine); }
+  a:hover { color: var(--color-wine-dark); }
+  input::placeholder { color: var(--color-placeholder); }
+  ::selection { background: var(--color-wine); color: var(--color-cream); }
+  button { font-family: inherit; }
+  :focus-visible {
+    outline: 3px solid var(--color-ink);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px var(--color-cream);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
