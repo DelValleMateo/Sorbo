@@ -1,298 +1,231 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Countdown } from "@/components/sections/countdown";
-import { AddToCart } from "@/components/ui/add-to-cart";
-import { ArrowIcon, PauseIcon, PlayIcon } from "@/components/ui/icons";
-import { Price } from "@/components/ui/price";
-import { HERO_COMBO_IDS } from "@/data/combos";
-import { discountPct, findSellable, type Sellable } from "@/lib/catalog";
-import { btn } from "@/lib/ui";
+import { PauseIcon, PlayIcon } from "@/components/ui/icons";
 import { usePrefersReducedMotion } from "@/lib/use-reduced-motion";
 
 const WORDS = ["asado.", "cena.", "brindis.", "domingo.", "festejo."];
-const SLIDE_MS = 6000;
-const WORD_MS = 3000;
+const WORD_MS = 2800;
 
-// Posiciones fijas (no aleatorias) para que servidor y cliente coincidan.
-const BUBBLES = Array.from({ length: 10 }, (_, i) => ({
-  x: (i * 37 + 11) % 100,
-  size: 4 + ((i * 7) % 10),
-  duration: 10 + ((i * 5) % 10),
-  delay: (i * 13) % 18,
-}));
+/** Partículas doradas: posiciones fijas para que servidor y cliente coincidan. */
+const MOTES = [
+  { cx: 120, cy: 560, r: 2.5, delay: 0 },
+  { cx: 360, cy: 600, r: 2, delay: 1.6 },
+  { cx: 560, cy: 580, r: 3, delay: 3.1 },
+  { cx: 80, cy: 420, r: 2, delay: 4.4 },
+  { cx: 600, cy: 420, r: 2.5, delay: 2.2 },
+  { cx: 400, cy: 300, r: 1.8, delay: 5.2 },
+];
 
-/** Accesos por ocasión: llevan directo al combo correspondiente. */
-const OCCASIONS = [
-  { label: "Asado", href: "/combos#combo-asado" },
-  { label: "Brindis", href: "/combos#combo-brindis" },
-  { label: "Previa", href: "/combos#combo-previa" },
-  { label: "Cata", href: "/combos#caja-degustacion" },
-] as const;
+const BOTTLE =
+  "M232 70 H268 V245 C268 282 328 298 328 350 V600 Q328 618 310 618 H190 Q172 618 172 600 V350 C172 298 232 282 232 245 Z";
+const BOWL = "M418 372 C416 444 438 512 480 518 C522 512 544 444 542 372 Z";
 
-const slides = HERO_COMBO_IDS.map((id) => findSellable(id)).filter(
-  (s): s is Sellable => Boolean(s),
-);
-
+/**
+ * Hero visual: solo la frase "Un vino para cada…" y una botella animada.
+ * La animación es decorativa, se puede pausar (WCAG 2.2.2) y se detiene con movimiento reducido.
+ */
 export function Hero() {
   const reduced = usePrefersReducedMotion();
-  const [slide, setSlide] = useState(0);
+  const [paused, setPaused] = useState(false);
   const [word, setWord] = useState(0);
-  const [userPaused, setUserPaused] = useState(false);
-  const [hover, setHover] = useState(false);
-  const [focusIn, setFocusIn] = useState(false);
-
-  // Se pausa con hover, con foco adentro, a pedido del usuario y con movimiento reducido (WCAG 2.2.2).
-  const running = !userPaused && !hover && !focusIn && !reduced;
+  const running = !paused && !reduced;
 
   useEffect(() => {
     if (!running) return;
-    const t = setInterval(() => setSlide((s) => (s + 1) % slides.length), SLIDE_MS);
-    return () => clearInterval(t);
-  }, [running, slide]);
-
-  useEffect(() => {
-    if (reduced) return;
     const t = setInterval(() => setWord((w) => (w + 1) % WORDS.length), WORD_MS);
     return () => clearInterval(t);
-  }, [reduced]);
-
-  const go = (i: number) => setSlide((i + slides.length) % slides.length);
+  }, [running]);
 
   return (
     <section
       id="top"
       aria-labelledby="hero-title"
-      className="focus-dark relative overflow-hidden bg-velvet text-cream"
+      className={`focus-dark relative overflow-hidden bg-felpa text-cream ${running ? "" : "hero-paused"}`}
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_80%_at_75%_45%,color-mix(in_srgb,var(--color-wine-light)_50%,transparent),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_80%_at_68%_45%,rgba(201,72,94,.35),transparent_60%),linear-gradient(180deg,rgba(20,3,7,.15),rgba(20,3,7,.55))]"
       />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        {BUBBLES.map((b, i) => (
+
+      <div className="wrap relative grid min-h-[min(86svh,800px)] items-center gap-6 pb-6 pt-10 lg:grid-cols-[1fr_1.05fr] lg:gap-10">
+        <h1 id="hero-title" className="flex flex-col gap-2 font-serif font-medium leading-none tracking-[-0.02em]">
+          <span className="sr-only">Un vino para cada ocasión: asado, cena, brindis, domingo y festejo.</span>
+          <span aria-hidden="true" className="animate-up text-[clamp(40px,5.2vw,76px)]">
+            Un vino para cada
+          </span>
           <span
-            key={i}
-            className="absolute -bottom-6 animate-rise rounded-full border border-gold/30 bg-cream/5"
-            style={{
-              left: `${b.x}%`,
-              width: b.size,
-              height: b.size,
-              animationDuration: `${b.duration}s`,
-              animationDelay: `-${b.delay}s`,
-            }}
-          />
-        ))}
+            aria-hidden="true"
+            className="relative inline-grid animate-up text-[clamp(68px,10vw,152px)] italic text-gold [animation-delay:.12s]"
+          >
+            {WORDS.map((w, i) => {
+              const on = i === word;
+              const prev = i === (word - 1 + WORDS.length) % WORDS.length;
+              return (
+                <span
+                  key={w}
+                  className={`col-start-1 row-start-1 whitespace-nowrap pb-[0.1em] transition-[opacity,transform,filter] duration-700 ${
+                    on
+                      ? "opacity-100"
+                      : `opacity-0 blur-[6px] ${prev ? "-translate-y-[0.35em]" : "translate-y-[0.35em]"}`
+                  }`}
+                >
+                  {w}
+                </span>
+              );
+            })}
+          </span>
+        </h1>
+
+        <div className="flex animate-up justify-center [animation-delay:.2s]">
+          <svg
+            viewBox="0 0 640 700"
+            role="img"
+            aria-label="Botella de Malbec Sorbo junto a una copa de vino tinto"
+            className="h-auto w-full max-w-[640px] overflow-visible"
+          >
+            <defs>
+              <linearGradient id="hero-glass-g" x1="0" x2="1">
+                <stop offset="0" stopColor="#0B0204" />
+                <stop offset=".16" stopColor="#3D0C17" />
+                <stop offset=".3" stopColor="#170508" />
+                <stop offset=".82" stopColor="#0A0203" />
+                <stop offset="1" stopColor="#2E0912" />
+              </linearGradient>
+              <linearGradient id="hero-sheen-g" x1="0" x2="1">
+                <stop offset="0" stopColor="#FFFFFF" stopOpacity="0" />
+                <stop offset=".5" stopColor="#FFFFFF" stopOpacity=".32" />
+                <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="hero-foil-g" x1="0" x2="1">
+                <stop offset="0" stopColor="#3A0912" />
+                <stop offset=".45" stopColor="#9A2A40" />
+                <stop offset="1" stopColor="#2A070D" />
+              </linearGradient>
+              <linearGradient id="hero-wine-g" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#A8243F" />
+                <stop offset="1" stopColor="#4A0815" />
+              </linearGradient>
+              <clipPath id="hero-bottle-clip">
+                <path d={BOTTLE} />
+              </clipPath>
+              <clipPath id="hero-bowl-clip">
+                <path d={BOWL} />
+              </clipPath>
+            </defs>
+
+            <ellipse cx="350" cy="634" rx="250" ry="16" fill="#000" opacity=".4" />
+
+            <g className="hero-bottle">
+              <path d={BOTTLE} fill="url(#hero-glass-g)" />
+              <rect x="227" y="62" width="46" height="120" rx="6" fill="url(#hero-foil-g)" />
+              <rect x="224" y="60" width="52" height="14" rx="5" fill="#9A2A40" />
+              <rect x="232" y="196" width="36" height="20" rx="2" fill="#E0C58A" />
+              <rect x="184" y="398" width="132" height="160" rx="4" fill="#EFE4CD" />
+              <rect x="192" y="406" width="116" height="144" rx="2" fill="none" stroke="#A88532" strokeWidth="1.2" />
+              <text
+                x="250"
+                y="458"
+                textAnchor="middle"
+                fontStyle="italic"
+                fontWeight="600"
+                fontSize="32"
+                fill="#6D1A2E"
+                style={{ fontFamily: "var(--font-serif)" }}
+              >
+                Sorbo
+              </text>
+              <rect x="222" y="472" width="56" height="1.5" fill="#A88532" />
+              <text
+                x="250"
+                y="500"
+                textAnchor="middle"
+                fontWeight="700"
+                fontSize="13"
+                letterSpacing="4"
+                fill="#2A1A1C"
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                MALBEC
+              </text>
+              <text
+                x="250"
+                y="520"
+                textAnchor="middle"
+                fontWeight="600"
+                fontSize="10"
+                letterSpacing="3"
+                fill="#4A3833"
+                style={{ fontFamily: "var(--font-sans)" }}
+              >
+                RESERVA
+              </text>
+              <path d="M188 364 V594" stroke="rgba(255,255,255,.13)" strokeWidth="7" strokeLinecap="round" />
+              <path d="M240 92 V236" stroke="rgba(255,255,255,.12)" strokeWidth="3" strokeLinecap="round" />
+              <g clipPath="url(#hero-bottle-clip)">
+                <rect className="hero-sheen" x="90" y="40" width="64" height="620" fill="url(#hero-sheen-g)" />
+              </g>
+            </g>
+
+            <g className="hero-glass">
+              <g clipPath="url(#hero-bowl-clip)">
+                <path
+                  className="hero-wave"
+                  d="M300 446 Q330 436 360 446 T420 446 T480 446 T540 446 T600 446 T660 446 T720 446 V540 H300 Z"
+                  fill="url(#hero-wine-g)"
+                />
+              </g>
+              <path d={BOWL} fill="rgba(255,255,255,.05)" stroke="rgba(255,240,230,.6)" strokeWidth="2" />
+              <path
+                d="M432 388 C431 430 442 470 458 490"
+                fill="none"
+                stroke="rgba(255,255,255,.35)"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+              <rect x="477" y="518" width="6" height="104" fill="rgba(255,240,230,.55)" />
+              <ellipse cx="480" cy="624" rx="50" ry="8" fill="rgba(255,240,230,.18)" stroke="rgba(255,240,230,.55)" strokeWidth="2" />
+            </g>
+
+            <g fill="#E0C58A">
+              {MOTES.map((m) => (
+                <circle
+                  key={`${m.cx}-${m.cy}`}
+                  className="hero-mote"
+                  cx={m.cx}
+                  cy={m.cy}
+                  r={m.r}
+                  style={{ animationDelay: `${m.delay}s` }}
+                />
+              ))}
+            </g>
+          </svg>
+        </div>
       </div>
 
-      <div className="wrap relative grid items-center gap-8 py-9 md:py-12 lg:grid-cols-[1.05fr_1fr] lg:gap-14 lg:py-10">
-        {/* Texto: en mobile va primero y el CTA queda sobre el pliegue */}
-        <div className="flex flex-col items-start gap-5">
-          <div className="animate-up">
-            <Countdown />
-          </div>
-
-          <h1 id="hero-title" className="font-serif text-display font-medium">
-            <span className="sr-only">Un vino para cada ocasión</span>
-            <span aria-hidden="true" className="block animate-up [animation-delay:.08s]">
-              Un vino para
-            </span>
-            <span aria-hidden="true" className="block animate-up [animation-delay:.18s]">
-              cada{" "}
-              <span className="relative inline-grid italic text-gold">
-                {WORDS.map((w, i) => {
-                  const on = i === word;
-                  const prev = i === (word - 1 + WORDS.length) % WORDS.length;
-                  return (
-                    <span
-                      key={w}
-                      className={`col-start-1 row-start-1 whitespace-nowrap transition-[opacity,transform,filter] duration-500 ${
-                        on
-                          ? "opacity-100"
-                          : `opacity-0 blur-[6px] ${prev ? "-translate-y-[0.45em]" : "translate-y-[0.45em]"}`
-                      }`}
-                    >
-                      {w}
-                    </span>
-                  );
-                })}
-              </span>
-            </span>
-          </h1>
-
-          <p className="max-w-[32em] animate-up text-[clamp(16px,1.35vw,19px)] leading-relaxed [animation-delay:.26s] [text-wrap:pretty]">
-            Tintos, blancos y espumantes elegidos uno por uno, más combos y destilados. Pedís por
-            WhatsApp y te lo llevamos a casa.
-          </p>
-
-          <div className="flex w-full animate-up flex-col gap-3 [animation-delay:.34s] sm:w-auto sm:flex-row">
-            <Link href="/productos?cat=tintos,blancos,espumantes" className={btn("light", "lg")}>
-              Ver vinos <ArrowIcon width={18} height={18} />
-            </Link>
-            <Link href="/combos" className={btn("outline-light", "lg")}>
-              Ver combos
-            </Link>
-          </div>
-
-          <nav aria-label="Combos por ocasión" className="animate-up [animation-delay:.42s]">
-            <p className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-gold">
-              Pedí por ocasión
-            </p>
-            <ul className="flex flex-wrap gap-2">
-              {OCCASIONS.map((o) => (
-                <li key={o.label}>
-                  <Link
-                    href={o.href}
-                    className="inline-flex min-h-11 items-center rounded-lg border border-cream/35 bg-cream/5 px-4 text-[15px] font-bold text-cream no-underline transition-colors hover:border-gold hover:bg-cream hover:text-wine"
-                  >
-                    {o.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-
-        {/* Carrusel: selección de la semana */}
-        <div
-          role="region"
-          aria-roledescription="carrusel"
-          aria-label="Selección de la semana"
-          onMouseEnter={() => setHover(true)}
-          onMouseLeave={() => setHover(false)}
-          onFocus={() => setFocusIn(true)}
-          onBlur={() => setFocusIn(false)}
-          className="relative flex animate-up flex-col gap-3 [animation-delay:.3s]"
+      <div className="wrap relative flex items-center justify-between pb-6">
+        <span aria-hidden="true" className="w-11" />
+        <a
+          href="#combos"
+          aria-label="Bajar a los combos"
+          className="hero-bob inline-flex h-12 w-12 items-center justify-center rounded-full border border-cream/50 text-cream no-underline hover:bg-cream hover:text-wine"
         >
-          <div className="relative animate-float">
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 translate-x-3 translate-y-2 rotate-[3deg] rounded-3xl border border-gold/25 bg-cream/10"
-            />
-            <div className="relative grid" aria-live={running ? "off" : "polite"}>
-              {slides.map((s, i) => {
-                const on = i === slide;
-                const off = discountPct(s.price, s.oldPrice);
-                const dir = i < slide ? -1 : 1;
-                return (
-                  <article
-                    key={s.id}
-                    inert={!on}
-                    aria-hidden={!on}
-                    aria-roledescription="diapositiva"
-                    aria-label={`${i + 1} de ${slides.length}: ${s.name}`}
-                    style={on ? undefined : { transform: `translateX(${dir * 48}px) scale(.97)` }}
-                    className={`col-start-1 row-start-1 flex flex-col overflow-hidden rounded-3xl bg-cream text-ink shadow-hero ring-1 ring-gold/30 transition-[opacity,transform] duration-700 ${
-                      on ? "opacity-100" : "pointer-events-none opacity-0"
-                    }`}
-                  >
-                    <div className="relative aspect-[16/10] bg-white lg:aspect-[2/1]">
-                      <Image
-                        src={s.image}
-                        alt={s.imageAlt}
-                        fill
-                        priority={i === 0}
-                        sizes="(min-width: 1024px) 560px, (min-width: 768px) 90vw, 100vw"
-                        className="object-cover"
-                      />
-                      <span className="absolute left-4 top-4 rounded-md bg-wine-deep px-2.5 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-gold">
-                        Selección de la semana
-                      </span>
-                      {off > 0 && (
-                        <span className="absolute right-4 top-4 flex h-16 w-16 rotate-[8deg] flex-col items-center justify-center rounded-full bg-gold text-lg font-extrabold leading-none text-ink shadow-cta">
-                          −{off}%
-                          <span className="mt-0.5 text-[11px] font-bold tracking-wider">OFF</span>
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-3 p-5">
-                      <div className="flex items-start justify-between gap-4">
-                        <h2 className="font-serif text-[clamp(24px,2.3vw,30px)] font-medium leading-none tracking-tight">
-                          {s.name}
-                        </h2>
-                        <Price price={s.price} oldPrice={s.oldPrice} className="text-2xl" stacked />
-                      </div>
-                      <ul className="flex flex-wrap gap-x-4 gap-y-1">
-                        {s.detail.split(" + ").map((it) => (
-                          <li key={it} className="flex items-center gap-2 text-[15px] text-ink-soft">
-                            <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rotate-45 bg-gold-deep" />
-                            {it}
-                          </li>
-                        ))}
-                      </ul>
-                      <AddToCart item={s} size="lg" label="Agregar al pedido" className="w-full" />
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Controles: puntos con progreso, pausa y flechas */}
-          <div className="flex items-center gap-2 px-1">
-            <div role="group" aria-label="Elegir combo" className="flex flex-1 items-center">
-              {slides.map((s, i) => {
-                const on = i === slide;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => go(i)}
-                    aria-label={`Ver ${s.name}`}
-                    aria-current={on ? "true" : undefined}
-                    className="flex h-11 items-center px-1.5"
-                  >
-                    <span
-                      className={`relative block h-1.5 overflow-hidden rounded-full transition-[width] duration-300 ${
-                        on ? "w-10 bg-cream/30" : "w-4 bg-cream/40 hover:bg-cream/70"
-                      }`}
-                    >
-                      {on && (
-                        <span
-                          key={slide}
-                          className="absolute inset-0 origin-left animate-progress bg-gold"
-                          style={{
-                            animationDuration: `${SLIDE_MS}ms`,
-                            animationPlayState: running ? "running" : "paused",
-                            transform: reduced ? "scaleX(1)" : undefined,
-                          }}
-                        />
-                      )}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            {!reduced && (
-              <button
-                type="button"
-                onClick={() => setUserPaused((p) => !p)}
-                aria-label={userPaused ? "Reanudar carrusel" : "Pausar carrusel"}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-cream/50 hover:bg-cream hover:text-wine"
-              >
-                {userPaused ? <PlayIcon width={16} height={16} /> : <PauseIcon width={16} height={16} />}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => go(slide - 1)}
-              aria-label="Combo anterior"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-cream/50 hover:bg-cream hover:text-wine"
-            >
-              <ArrowIcon width={18} height={18} className="rotate-180" />
-            </button>
-            <button
-              type="button"
-              onClick={() => go(slide + 1)}
-              aria-label="Combo siguiente"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-cream/50 hover:bg-cream hover:text-wine"
-            >
-              <ArrowIcon width={18} height={18} />
-            </button>
-          </div>
-        </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </a>
+        {reduced ? (
+          <span aria-hidden="true" className="w-11" />
+        ) : (
+          <button
+            type="button"
+            onClick={() => setPaused((p) => !p)}
+            aria-label={paused ? "Reanudar animación" : "Pausar animación"}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-cream/40 text-cream hover:bg-cream hover:text-wine"
+          >
+            {paused ? <PlayIcon width={16} height={16} /> : <PauseIcon width={16} height={16} />}
+          </button>
+        )}
       </div>
     </section>
   );
