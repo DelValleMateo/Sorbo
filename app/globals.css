@@ -8,7 +8,7 @@
   /* Superficies */
   --color-paper: #450d19; /* color medio del cuero bordó de fondo (respaldo) */
   --color-cream: #fbf6ec;
-  --color-paper-light: #c7b89b; /* crema (fondo-papel.webp: cuero crema con textura) */
+  --color-paper-light: #eee6d7; /* marfil (fondo-papel.webp aclarado con un velo crema) */
   --color-sand: #efe5d3;
 
   /* Líneas */
@@ -30,8 +30,8 @@
   --color-wine-deep: #3f0d19;
   --color-wine-light: #8a2538;
   --color-wine-tint: #f1dfd8;
-  --color-gold: #e0c58a; /* champagne: acentos sobre fondos oscuros (7.5:1 sobre la felpa) */
-  --color-gold-deep: #a88532; /* champagne: líneas y estrellas sobre marfil (decorativo) */
+  --color-gold: #f1e6d0; /* marfil: acentos sobre fondos oscuros (reemplaza al dorado) */
+  --color-gold-deep: #8a6f5a; /* topo: líneas y estrellas sobre crema (reemplaza al dorado) */
 
   /* Estados (siempre acompañados de ícono + texto) */
   --color-ok: #1f4127;
@@ -118,10 +118,10 @@
   background-position: center;
 }
 
-/* Superficie papel: marfil con la misma textura de felpa, en tono claro */
+/* Superficie papel: marfil. Un velo claro sobre la textura de cuero crema la aclara sin perder el relieve. */
 @utility bg-papel {
   background-color: var(--color-paper-light);
-  background-image: url("/images/fondo-papel.webp");
+  background-image: linear-gradient(rgb(251 246 236 / 0.72), rgb(251 246 236 / 0.72)), url("/images/fondo-papel.webp");
   background-size: cover;
   background-position: center;
 }
@@ -143,22 +143,47 @@
 }
 
 
-/* ─── Hero animado (botella + copa) ─────────────────────────────── */
-@keyframes hero-float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-14px) rotate(-1deg); } }
-@keyframes hero-sheen { 0% { transform: translateX(-140px); } 55%, 100% { transform: translateX(320px); } }
-@keyframes hero-sway { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
-@keyframes hero-wave { from { transform: translateX(0); } to { transform: translateX(-120px); } }
+/* ─── Hero animado (cinta de botellas → bolsa) ──────────────────────
+ * Cada botella recorre el estante (X) y salta dentro de la bolsa (Y).
+ * X e Y van en grupos distintos para que el arco sea continuo.
+ * Ciclo de 10 s con 5 botellas (BELT_S en hero.tsx): una entra cada 2 s.
+ */
+@keyframes hero-belt-x {
+  0% { transform: translateX(-110px); opacity: 0; animation-timing-function: linear; }
+  5% { opacity: 1; }
+  72% { transform: translateX(440px); animation-timing-function: cubic-bezier(.3, .2, .4, 1); }
+  86%, 100% { transform: translateX(610px); }
+  95% { opacity: 1; }
+  97%, 100% { opacity: 0; }
+}
+@keyframes hero-belt-y {
+  0%, 64% { transform: translateY(0) rotate(0); animation-timing-function: cubic-bezier(.4, .15, .45, 1); }
+  76% { transform: translateY(-205px) rotate(-4deg); animation-timing-function: cubic-bezier(.5, 0, .9, .55); }
+  90%, 100% { transform: translateY(170px) rotate(0); }
+}
+@keyframes hero-belt-shadow {
+  0%, 64% { opacity: 1; transform: scale(1); animation-timing-function: ease-out; }
+  74%, 100% { opacity: 0; transform: scale(.55); }
+}
+/* La bolsa "recibe" cada botella: se aplasta un poco y rebota.
+ * El delay de .hero-bag (-0.52s) la sincroniza con el desfase de 1 s de las botellas (hero.tsx). */
+@keyframes hero-bag {
+  0%, 4% { transform: scale(1, 1); animation-timing-function: ease-out; }
+  12% { transform: scale(1.022, .97); animation-timing-function: ease-in-out; }
+  24% { transform: scale(.994, 1.008); animation-timing-function: ease-in-out; }
+  36%, 100% { transform: scale(1, 1); }
+}
 @keyframes hero-mote { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 0.75; } 100% { opacity: 0; transform: translateY(-200px); } }
 @keyframes hero-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
 
 @layer components {
-  .hero-bottle { transform-box: fill-box; transform-origin: 50% 100%; animation: hero-float 7s ease-in-out infinite; }
-  .hero-sheen { animation: hero-sheen 5.5s ease-in-out infinite; }
-  .hero-glass { transform-box: fill-box; transform-origin: 50% 100%; animation: hero-sway 6s ease-in-out infinite; }
-  .hero-wave { animation: hero-wave 3.2s linear infinite; }
+  .hero-belt-x { animation: hero-belt-x 10s infinite; animation-delay: var(--belt-delay, 0s); will-change: transform, opacity; }
+  .hero-belt-y { transform-box: fill-box; transform-origin: 50% 100%; animation: hero-belt-y 10s infinite; animation-delay: var(--belt-delay, 0s); will-change: transform; }
+  .hero-belt-shadow { transform-box: fill-box; transform-origin: center; animation: hero-belt-shadow 10s infinite; animation-delay: var(--belt-delay, 0s); }
+  .hero-bag { transform-box: view-box; transform-origin: 610px 560px; animation: hero-bag 2s infinite -0.52s; }
   .hero-mote { opacity: 0; animation: hero-mote 7s ease-in-out infinite; }
   .hero-bob { animation: hero-bob 2.4s ease-in-out infinite; }
-  .hero-paused :is(.hero-bottle, .hero-sheen, .hero-glass, .hero-wave, .hero-mote, .hero-bob) { animation-play-state: paused; }
+  .hero-paused :is(.hero-belt-x, .hero-belt-y, .hero-belt-shadow, .hero-bag, .hero-mote, .hero-bob) { animation-play-state: paused; }
 }
 
 @layer base {

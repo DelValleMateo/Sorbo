@@ -7,7 +7,7 @@ const ITEMS = [
   { Icon: ChatIcon, title: "Pedí por WhatsApp", text: "Te respondemos al toque" },
 ] as const;
 
-/** Franja de beneficios: angosta, en una línea desde tablet, con divisores dorados. */
+/** Franja de beneficios: angosta, en una línea desde tablet, con divisores en tono topo. */
 export function TrustStrip() {
   return (
     <section aria-label="Beneficios de comprar en Sorbo" className="border-b border-gold-deep/40 bg-papel">

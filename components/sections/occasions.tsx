@@ -55,7 +55,8 @@ const OCCASIONS = [
 export function Occasions() {
   return (
     <section aria-labelledby="ocasion-title" className="bg-papel">
-      <div className="wrap flex flex-col gap-10 pb-4 pt-16 md:pt-20">
+      {/* Más ancho que el .wrap estándar (1240 px) para que las tarjetas respiren */}
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-10 px-[clamp(16px,4vw,40px)] pb-4 pt-16 md:pt-20">
         <SectionHeading
           id="ocasion-title"
           eyebrow="Pedí por ocasión"
