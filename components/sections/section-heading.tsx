@@ -3,7 +3,7 @@ import { ArrowIcon } from "@/components/ui/icons";
 
 type Tone = "light" | "dark";
 
-/** Antetítulo con ornamento: filete + rombo. Dorado sobre felpa, vino sobre marfil. */
+/** Antetítulo con ornamento: filete + rombo. Marfil sobre felpa, vino sobre crema. */
 export function Eyebrow({ children, tone = "light" }: { children: React.ReactNode; tone?: Tone }) {
   return (
     <span
